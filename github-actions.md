@@ -37,16 +37,16 @@ Shipper ships two GitHub Actions integration points: (1) reusable workflow files
 | `working-directory` | No | `.` | Directory containing `shipper.yml` |
 
 **Action behavior:**
-1. Downloads binary from `https://github.com/ulties/shipper/releases/{version}/download/shipper`
+1. Downloads binary from `https://github.com/shippercli/cli/releases/{version}/download/shipper`
 2. Makes it executable and verifies with `--version`
 3. Runs command with arguments built safely via bash arrays (no shell injection)
 4. Outputs `exit-code` for downstream steps
 
 **Referenced as:**
 ```yaml
-uses: ulties/shipper/.github/actions/shipper@v1.0.0   # specific tag
-uses: ulties/shipper/.github/actions/shipper@main      # latest dev
-uses: ulties/shipper/.github/actions/shipper@939e086   # specific commit
+uses: shippercli/actions/.github/actions/shipper@v1.0.0   # specific tag
+uses: shippercli/actions/.github/actions/shipper@main      # latest dev
+uses: shippercli/actions/.github/actions/shipper@939e086   # specific commit
 ```
 
 ## Functional Requirements
@@ -98,7 +98,7 @@ The action writes `exit-code=$EXIT_CODE` to `$GITHUB_OUTPUT` so downstream steps
 **Using the Shipper Action:**
 ```yaml
 - uses: actions/checkout@v4
-- uses: ulties/shipper/.github/actions/shipper@main
+- uses: shippercli/actions/.github/actions/shipper@main
   with:
     command: apply
     project: api
@@ -137,6 +137,6 @@ All workflow files use `strategy.matrix.project: [api, frontend]` to deploy mult
 ## Open Questions / Potential Concerns
 
 - **Binary integrity:** The action does not verify SHA256 checksum of the downloaded binary. Should checksums be published alongside releases?
-- **Action versioning:** The action in the Shipper repo itself (`ulties/shipper/.github/actions/shipper`) is versioned by the same tag as the binary. Using `@main` picks up both the latest action and the latest binary — is this the intended co-versioning story?
+- **Action versioning:** The action in the Shipper repo itself (`shippercli/actions/.github/actions/shipper`) is versioned by the same tag as the binary. Using `@main` picks up both the latest action and the latest binary — is this the intended co-versioning story?
 - **Concurrent matrix runs:** If two PRs are opened simultaneously, both `deploy-preview.yml` and `cleanup-preview.yml` runs could conflict if they target the same preview domain (shouldn't happen with unique PR numbers, but worth confirming the domain locking is atomic on the provider side)
-- **Self-hosting the action:** Users who want to pin to a specific version reference `ulties/shipper/.github/actions/shipper@vX.Y.Z` — this requires the Shipper repo to remain public. Is private hosting intended?
+- **Self-hosting the action:** Users who want to pin to a specific version reference `shippercli/actions/.github/actions/shipper@vX.Y.Z` — this requires the Shipper repo to remain public. Is private hosting intended?
