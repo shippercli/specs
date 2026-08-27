@@ -37,9 +37,9 @@ Shipper ships two GitHub Actions integration points: (1) reusable workflow files
 | `working-directory` | No | `.` | Directory containing `shipper.yml` |
 
 **Action behavior:**
-1. Downloads binary from `https://github.com/shippercli/cli/releases/{version}/download/shipper`
-2. Makes it executable and verifies with `--version`
-3. Runs command with arguments built safely via bash arrays (no shell injection)
+1. Sets up PHP and Composer for the action
+2. Installs `shippercli/cli` and the requested provider packages into an isolated tool directory
+3. Verifies and runs that installation's `vendor/bin/shipper` with arguments built safely via bash arrays
 4. Outputs `exit-code` for downstream steps
 
 **Referenced as:**
@@ -51,8 +51,8 @@ uses: shippercli/actions/.github/actions/shipper@939e086   # specific commit
 
 ## Functional Requirements
 
-**FR-001 — Binary Download and Verification**
-The action downloads the binary, verifies it is executable, and runs `--version` to confirm validity before executing the user's command.
+**FR-001 — Composer Installation and Verification**
+The action installs Shipper and requested provider packages into an isolated Composer tool directory, verifies `vendor/bin/shipper`, and runs `--version` before executing the user's command.
 
 **FR-002 — Safe Argument Handling**
 Command arguments are built using a bash array (`ARGS=("$COMMAND")`) to prevent shell injection. No `eval` or string concatenation.
@@ -116,9 +116,9 @@ All workflow files use `strategy.matrix.project: [api, frontend]` to deploy mult
 
 ## Edge Cases
 
-- **Binary download fails:** Action exits with error if downloaded file is not executable or fails `--version` check
+- **Composer installation fails:** Action exits with error if Shipper or a requested provider cannot be installed
 - **Invalid command:** Shipper itself returns exit code 1; action propagates it
-- **Version not found:** GitHub release download returns 404; curl fails and action exits with error
+- **Version constraint not found:** Composer fails to resolve the CLI or provider constraint and the action exits with error
 - **Rate limiting:** GitHub API rate limits are handled by the CLI commands, not by the action
 - **Cleanup on force-merge:** When a PR is squash-merged, GitHub fires the `closed` event, triggering cleanup — correct behavior
 - **Re-opening PR:** `cleanup-preview.yml` fires on close; reopening creates a new preview via `deploy-preview.yml` (triggered on `opened` and `synchronize`)
