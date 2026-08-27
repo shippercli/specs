@@ -104,6 +104,8 @@ The action writes `exit-code=$EXIT_CODE` to `$GITHUB_OUTPUT` so downstream steps
     project: api
     profile: production
     force: true
+    providers: |
+      shippercli/provider-ploi:^1.0
   env:
     PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
 ```
