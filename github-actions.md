@@ -6,137 +6,101 @@
 
 ## Overview
 
-Shipper ships two GitHub Actions integration points: (1) reusable workflow files in `.github/workflows/` for CI/CD pipelines, and (2) a composite GitHub Action at `.github/actions/shipper/` that allows any repository to invoke Shipper without PHP/Composer setup.
+Shipper provides workflow examples in the CLI repository and a composite action in `shippercli/actions/.github/actions/shipper`. The action sets up its own PHP and Composer runtime, installs the CLI and requested provider packages together in an isolated tool directory, and runs Shipper against the checked-out application.
 
-## Current Implementation
+The application does not need Shipper in its `composer.json`, `composer.lock`, or `vendor` directory.
 
-### Workflow Files
-
-| Workflow | Trigger | Purpose |
-|---|---|---|
-| `build-release.yml` | Tag push (`v*`) | Builds PHAR binary, creates GitHub release with binary attached |
-| `ci.yml` | Push/PR | Runs tests and linting |
-| `deploy-production.yml` | Push to `main` | Deploys all projects to production via `./shipper apply` |
-| `deploy-staging.yml` | Push to `develop` | Deploys all projects to staging |
-| `deploy-preview.yml` | PR to `main`/`develop` | Creates PR preview environment |
-| `cleanup-preview.yml` | PR closed (`main`/`develop`) | Destroys preview environment on PR close |
-| `weekly-cleanup.yml` | Scheduled | Weekly orphan site cleanup |
-| `deploy-production-action-example.yml` | Push to `main` | Example using the reusable Shipper Action |
-
-### Reusable Action — `.github/actions/shipper/`
-
-**action.yml** inputs:
+## Composite Action Inputs
 
 | Input | Required | Default | Description |
 |---|---|---|---|
-| `command` | Yes | — | `validate`, `plan`, `apply`, `destroy` |
-| `project` | No | — | Project name from `shipper.yml` |
-| `profile` | No | — | Profile name (production, staging, preview) |
+| `command` | Yes | - | `validate`, `plan`, `apply`, `status`, `logs`, `rollback`, or `destroy` |
+| `project` | No | - | Project name from `shipper.yml` |
+| `profile` | No | - | Profile name such as production, staging, or preview |
 | `force` | No | `false` | Skip confirmation prompts |
-| `version` | No | `latest` | CLI version (tag or `latest`) |
+| `release` | No | - | Provider release identifier for rollback |
+| `lines` | No | - | Maximum log lines |
 | `working-directory` | No | `.` | Directory containing `shipper.yml` |
+| `php-version` | No | `8.3` | PHP used for the isolated Shipper installation |
+| `cli-version` | No | `^1.0` | Composer constraint for `shippercli/cli` |
+| `providers` | Yes | - | Provider packages, one per line with an optional constraint |
 
-**Action behavior:**
-1. Downloads binary from `https://github.com/ulties/shipper/releases/{version}/download/shipper`
-2. Makes it executable and verifies with `--version`
-3. Runs command with arguments built safely via bash arrays (no shell injection)
-4. Outputs `exit-code` for downstream steps
+## Action Behavior
 
-**Referenced as:**
-```yaml
-uses: ulties/shipper/.github/actions/shipper@v1.0.0   # specific tag
-uses: ulties/shipper/.github/actions/shipper@main      # latest dev
-uses: ulties/shipper/.github/actions/shipper@939e086   # specific commit
-```
+1. Sets up PHP and Composer independently of the application.
+2. Canonicalizes and validates the provider package list.
+3. Installs `shippercli/cli` and all providers in one isolated Composer tool directory.
+4. Caches that tool installation by OS, PHP version, CLI constraint, and provider list.
+5. Confirms requested packages are visible as `shipper-plugin` packages through Composer's `InstalledVersions`.
+6. Runs `vendor/bin/shipper --version`, allowlists the requested command, and passes inputs through environment variables and a bash argument array.
+7. Runs from `working-directory` without modifying the application's Composer files.
 
-## Functional Requirements
+## Reference
 
-**FR-001 — Binary Download and Verification**
-The action downloads the binary, verifies it is executable, and runs `--version` to confirm validity before executing the user's command.
+Pin consumers to a release tag or commit SHA, not `main`:
 
-**FR-002 — Safe Argument Handling**
-Command arguments are built using a bash array (`ARGS=("$COMMAND")`) to prevent shell injection. No `eval` or string concatenation.
-
-**FR-003 — Exit Code Propagation**
-The action writes `exit-code=$EXIT_CODE` to `$GITHUB_OUTPUT` so downstream steps can inspect the result.
-
-**FR-004 — GitHub Release Triggered Build**
-`build-release.yml` fires on any tag matching `v*`. It compiles the PHAR and attaches it to a GitHub release via `softprops/action-gh-release@v1`.
-
-**FR-005 — Preview Deployment PR Commenting**
-`deploy-preview.yml` uses `actions/github-script@v7` to comment on the PR with the preview URL after deployment.
-
-**FR-006 — Preview Cleanup on PR Close**
-`cleanup-preview.yml` triggers on `pull_request: types: [closed]`, destroying the preview site and commenting on the PR.
-
-## Configuration Interface
-
-### Environment Variables
-
-| Variable | Required | Used by |
-|---|---|---|
-| `PLOI_API_KEY` | Yes | `apply`, `plan`, `destroy` |
-| `GITHUB_PR_NUMBER` | Preview only | `apply`/`destroy` for preview profile |
-| `GITHUB_HEAD_REF` | Preview only | `apply`/`destroy` for preview profile |
-
-### Full Workflow Example (manual setup vs action)
-
-**Traditional (manual PHP setup):**
 ```yaml
 - uses: actions/checkout@v4
-- uses: shivammathur/setup-php@v2
-  with:
-    php-version: '8.3'
-    extensions: mbstring, xml, ctype, json, yaml
-    coverage: none
-- run: composer install --no-dev
-- run: ./shipper apply api --profile=production --force
-  env:
-    PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
-```
-
-**Using the Shipper Action:**
-```yaml
-- uses: actions/checkout@v4
-- uses: ulties/shipper/.github/actions/shipper@main
+- uses: shippercli/actions/.github/actions/shipper@c2c276e12f831ba2c3377a063d579fede5cc5ecc
   with:
     command: apply
     project: api
     profile: production
     force: true
+    cli-version: '^1.0'
+    providers: |
+      shippercli/provider-cpanel:^1.0
   env:
-    PLOI_API_KEY: ${{ secrets.PLOI_API_KEY }}
+    CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
 ```
 
-### Matrix Strategy
+Multiple published providers share one install. The package names below are
+illustrative:
 
-All workflow files use `strategy.matrix.project: [api, frontend]` to deploy multiple projects in parallel, with `needs:` dependencies for sequential ordering (e.g., API before frontend).
+```yaml
+providers: |
+  vendor/provider-one:^1.0
+  vendor/provider-two:^1.0
+```
+
+## Functional Requirements
+
+**FR-001 - Isolated Composer installation**
+The action installs the CLI and providers outside the application checkout and runs that installation's `vendor/bin/shipper`.
+
+**FR-002 - Provider discovery**
+Every requested package must be installed with Composer type `shipper-plugin` and visible to `Composer\\InstalledVersions` in the CLI process.
+
+**FR-003 - Safe argument handling**
+Inputs are passed through `env:`; commands are allowlisted and arguments are built as a bash array. The action does not evaluate free-form shell input.
+
+**FR-004 - Cache isolation**
+The cache key represents the action toolchain only and never hashes the application's lockfile.
+
+**FR-005 - Exit code propagation**
+The action writes `exit-code` to `GITHUB_OUTPUT` and returns the CLI exit code.
 
 ## Edge Cases
 
-- **Binary download fails:** Action exits with error if downloaded file is not executable or fails `--version` check
-- **Invalid command:** Shipper itself returns exit code 1; action propagates it
-- **Version not found:** GitHub release download returns 404; curl fails and action exits with error
-- **Rate limiting:** GitHub API rate limits are handled by the CLI commands, not by the action
-- **Cleanup on force-merge:** When a PR is squash-merged, GitHub fires the `closed` event, triggering cleanup — correct behavior
-- **Re-opening PR:** `cleanup-preview.yml` fires on close; reopening creates a new preview via `deploy-preview.yml` (triggered on `opened` and `synchronize`)
+- Empty provider lists fail before installation.
+- Invalid package names and non-plugin packages fail with a clear error.
+- Conflicting or unavailable Composer constraints fail the single Composer install.
+- Unsupported commands fail before the CLI is invoked.
+- A missing CLI binary or failed `--version` check fails the action.
+- Duplicate provider lines are deduplicated before installation and cache hashing.
 
 ## Acceptance Criteria
 
-- [ ] `deploy-preview.yml` fires on PR open and synchronize
-- [ ] `cleanup-preview.yml` fires on PR close
-- [ ] Action downloads binary from correct URL per version input
-- [ ] Action verifies binary with `--version` before executing
-- [ ] Action uses bash array for argument construction (no shell injection vectors)
-- [ ] Action outputs `exit-code` that downstream steps can inspect
-- [ ] `build-release.yml` triggers on any `v*` tag and attaches binary to release
-- [ ] `ci.yml` runs on every push and pull request
-- [ ] All workflows use `force: true` or `--force` to skip confirmation in CI
-- [ ] Preview workflows pass `GITHUB_PR_NUMBER` and `GITHUB_HEAD_REF` env vars
+- [ ] CLI and providers are installed together outside the application checkout.
+- [ ] The action runs `$SHIPPER_HOME/vendor/bin/shipper`, never a downloaded PHAR.
+- [ ] Application Composer files and `vendor` are not modified.
+- [ ] Requested providers are confirmed through `InstalledVersions::getInstalledPackagesByType('shipper-plugin')`.
+- [ ] Inputs use environment variables and argv; `command` is allowlisted.
+- [ ] Cache identity includes OS, PHP, CLI constraint, and canonical providers.
+- [ ] Examples require `providers` and pin `shippercli/actions` to a tag or SHA.
+- [ ] Preview workflows pass `GITHUB_PR_NUMBER` and `GITHUB_HEAD_REF`.
 
-## Open Questions / Potential Concerns
+## Open Questions
 
-- **Binary integrity:** The action does not verify SHA256 checksum of the downloaded binary. Should checksums be published alongside releases?
-- **Action versioning:** The action in the Shipper repo itself (`ulties/shipper/.github/actions/shipper`) is versioned by the same tag as the binary. Using `@main` picks up both the latest action and the latest binary — is this the intended co-versioning story?
-- **Concurrent matrix runs:** If two PRs are opened simultaneously, both `deploy-preview.yml` and `cleanup-preview.yml` runs could conflict if they target the same preview domain (shouldn't happen with unique PR numbers, but worth confirming the domain locking is atomic on the provider side)
-- **Self-hosting the action:** Users who want to pin to a specific version reference `ulties/shipper/.github/actions/shipper@vX.Y.Z` — this requires the Shipper repo to remain public. Is private hosting intended?
+- Should the action publish immutable major tags such as `v1` automatically when a `v1.x.y` release is created?
+- Should reusable workflow examples be retained after consumers have migrated to the composite action?
