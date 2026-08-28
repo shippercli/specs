@@ -41,7 +41,7 @@ Pin consumers to a release tag or commit SHA, not `main`:
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: shippercli/actions/.github/actions/shipper@f31a980b0c6d51b531735d4cd68b2268ad54d193
+- uses: shippercli/actions/.github/actions/shipper@c2c276e12f831ba2c3377a063d579fede5cc5ecc
   with:
     command: apply
     project: api
