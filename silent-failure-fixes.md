@@ -1,3 +1,7 @@
+---
+description: "**Date:** 2026-04-26 **Status:** Draft"
+---
+
 # Spec: Silent Failure Fixes — DB Deletion, Orphan Cleanup Errors
 
 **Date:** 2026-04-26

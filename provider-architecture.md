@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-20 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Provider Architecture
 
 **Issue:** MAR-20

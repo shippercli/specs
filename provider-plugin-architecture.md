@@ -1,3 +1,7 @@
+---
+description: "How provider packages advertise plugin metadata, expose provider mappings, and are discovered by the Shipper CLI."
+---
+
 # Spec: Provider Plugin Architecture
 
 **Issue:** MAR-49

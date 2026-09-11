@@ -1,3 +1,7 @@
+---
+description: "![Shipper Banner](https://raw.githubusercontent.com/shippercli/assets/main/banner.png)"
+---
+
 # Shipper CLI Specifications
 
 ![Shipper Banner](https://raw.githubusercontent.com/shippercli/assets/main/banner.png)

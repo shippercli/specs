@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-27 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: SSL Management
 
 **Issue:** MAR-27

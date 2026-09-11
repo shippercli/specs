@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-34 **Date:** 2026-04-24 **Status:** In Review"
+---
+
 # Spec: Repository Management
 
 **Issue:** MAR-34

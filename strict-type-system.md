@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-43 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Strict Type System
 
 **Issue:** MAR-43

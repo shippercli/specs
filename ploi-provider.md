@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-38 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Ploi Provider
 
 **Issue:** MAR-38

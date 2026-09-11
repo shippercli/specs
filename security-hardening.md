@@ -1,3 +1,7 @@
+---
+description: "**Date:** 2026-04-26 **Status:** Draft"
+---
+
 # Spec: Security Hardening — Path Traversal, Env Validation, Rate Limit Retry
 
 **Date:** 2026-04-26

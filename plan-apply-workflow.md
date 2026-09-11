@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-36 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Plan/Apply Workflow
 
 **Issue:** MAR-36

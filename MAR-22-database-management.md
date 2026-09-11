@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-22 **Date:** 2026-04-24 **Status:** In Review"
+---
+
 # Spec: Database Management
 
 **Issue:** MAR-22
