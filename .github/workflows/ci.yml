@@ -1,0 +1,50 @@
+name: Content CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate specifications
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Validate specification metadata and links
+        shell: ruby {0}
+        run: |
+          errors = []
+
+          Dir.glob('**/*.md').sort.each do |path|
+            content = File.read(path)
+            lines = content.lines
+
+            errors << "#{path}: missing H1 title" unless lines.any? { |line| line.start_with?('# ') }
+            next if File.basename(path) == 'README.md'
+
+            errors << "#{path}: missing Date metadata" unless content.match?(/^\*\*Date:\*\*\s+.+$/)
+            errors << "#{path}: missing Status metadata" unless content.match?(/^\*\*Status:\*\*\s+.+$/)
+
+            content.scan(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/).flatten.each do |link|
+              next if link.start_with?('#', 'http://', 'https://', 'mailto:')
+
+              target = link.split('#', 2).first
+              next if target.empty?
+
+              resolved = File.expand_path(target, File.dirname(path))
+              candidates = [resolved, "#{resolved}.md", File.join(resolved, 'README.md')]
+              errors << "#{path}: unresolved local link #{link}" unless candidates.any? { |candidate| File.file?(candidate) }
+            end
+          end
+
+          abort(errors.join("\n")) unless errors.empty?

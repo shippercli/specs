@@ -6,7 +6,7 @@
 
 ## Overview
 
-The Deployment module is the core of Shipper's mission — provisioning Laravel sites on remote servers via provider APIs (Ploi, Forge). It uses a plugin-style architecture where each provider implements a set of contracts (interfaces) that drive a 15-step deployment pipeline. This spec documents the shared architecture, not any single provider.
+The Deployment module is the core of Shipper's mission — provisioning Laravel sites on remote servers via provider APIs (Ploi, Forge, EasyPanel, cPanel). It uses a plugin-style architecture where each provider implements a set of contracts (interfaces) that drive a 15-step deployment pipeline. This spec documents the shared architecture, not any single provider.
 
 ## Current Implementation
 
