@@ -1,3 +1,7 @@
+---
+description: "Composer-isolated GitHub Action installation, provider discovery, inputs, caching, and workflow requirements."
+---
+
 # Spec: GitHub Actions Integration
 
 **Issue:** MAR-40

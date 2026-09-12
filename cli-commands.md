@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-19 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: CLI Commands
 
 **Issue:** MAR-19

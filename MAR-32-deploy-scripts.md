@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-32 **Date:** 2026-04-24 **Status:** In Review"
+---
+
 # Spec: Deploy Scripts
 
 **Issue:** MAR-32

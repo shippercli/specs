@@ -1,3 +1,7 @@
+---
+description: "**Date:** 2026-04-26 **Status:** Draft"
+---
+
 # Spec: Shipper Test Coverage Initiative
 
 **Date:** 2026-04-26

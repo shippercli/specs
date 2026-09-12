@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-30 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Domain Aliases
 
 **Issue:** MAR-30

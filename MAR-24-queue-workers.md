@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-24 **Date:** 2026-04-24 **Status:** In Review"
+---
+
 # Spec: Queue Workers
 
 **Issue:** MAR-24

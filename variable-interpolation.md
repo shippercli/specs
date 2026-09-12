@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-42 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Variable Interpolation
 
 **Issue:** MAR-42

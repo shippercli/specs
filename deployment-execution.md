@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-35 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Deployment Execution
 
 **Issue:** MAR-35

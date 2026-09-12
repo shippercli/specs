@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-29 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Nginx Configuration
 
 **Issue:** MAR-29

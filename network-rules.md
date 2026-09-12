@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-28 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Network Rules
 
 **Issue:** MAR-28

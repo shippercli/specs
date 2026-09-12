@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-37 **Date:** 2026-04-24 **Status:** In Review"
+---
+
 # Spec: Orphan Cleanup — PR Preview Environments
 
 **Issue:** MAR-37

@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-31 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Redirect Rules
 
 **Issue:** MAR-31

@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-21 **Date:** 2026-04-24 **Status:** In Review"
+---
+
 # Spec: Site Lifecycle Management
 
 **Issue:** MAR-21

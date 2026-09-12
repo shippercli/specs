@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-18 **Date:** 2026-04-23 **Status:** In Review"
+---
+
 # Spec: Configuration System
 
 **Issue:** MAR-18

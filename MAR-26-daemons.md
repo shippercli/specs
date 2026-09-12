@@ -1,3 +1,7 @@
+---
+description: "**Issue:** MAR-26 **Date:** 2026-04-24 **Status:** In Review"
+---
+
 # Spec: Daemons
 
 **Issue:** MAR-26
