@@ -4,77 +4,59 @@ description: "**Issue:** MAR-34 **Date:** 2026-04-24 **Status:** In Review"
 
 # Spec: Repository Management
 
-**Issue:** MAR-34
-**Date:** 2026-04-24
+**Issue:** MAR-34  
+**Date:** 2026-04-24  
 **Status:** In Review
 
-## Overview
-Shipper installs a Git repository on a deployed site by calling the provider's API with provider name, repository name, and branch. Both Ploi and Forge are supported.
+## Current contract
 
-## Current Implementation
+Repository setup is provider-specific. Ploi can install a repository through
+its API. Forge API v2, used by `shippercli/provider-forge`, removed Git
+repository mutation endpoints; a Forge site must therefore have its source
+configured in Forge before Shipper triggers deployment. Shipper must not claim
+that it can install a Forge repository or pass the removed v1 `composer`
+payload.
 
-### Key Classes / Files
+## Provider behavior
 
-| File | Role |
-|------|------|
-| `app/Deployment/Contracts/RepositoryManagerInterface.php` | Interface defining plan/apply |
-| `app/Deployment/Providers/Ploi/PloiRepositoryManager.php` | Ploi implementation |
-| `app/Deployment/Providers/Forge/ForgeRepositoryManager.php` | Forge implementation |
+| Provider | Repository setup | Deployment behavior |
+|---|---|---|
+| Ploi | Installs provider/repository/branch through the Ploi API | Installs and deploys |
+| Forge | Requires a preconfigured Forge site source | Resolves the site and triggers API v2 deployment |
+| cPanel | Uses the provider's configured deployment mode | Provider-specific |
+| EasyPanel | Configures the declared source through the EasyPanel API | Deploys the app service |
 
-## Functional Requirements
+## Requirements
 
-**FR-001 — Repository Install**
-On `shipper apply`, install the configured Git repository onto the site using the provider's API.
+**FR-001 — Provider-specific source handling**  
+Each provider must either configure the source through a supported API or
+return a clear limitation before mutation.
 
-**FR-002 — Branch from Profile**
-The branch to deploy comes from `$context->profile->branch()`.
+**FR-002 — Branch handling**  
+Providers that expose branch configuration must use the profile branch. A
+provider without a repository mutation endpoint must not silently ignore it.
 
-**FR-003 — Plan Description**
-`plan()` returns "Install repository: {provider}:{name} ({branch})".
+**FR-003 — Plan description**  
+`plan()` must describe whether the source will be installed, reused, or must
+be preconfigured by the provider.
 
-**FR-004 — Composer Install**
-Forge provider passes `composer: true` in the API payload to trigger Composer install post-deployment.
+**FR-004 — Failure propagation**  
+Unsupported source mutation returns an actionable provider error and never
+reports a successful deployment.
 
-## Data Contracts
+## Forge API v2 limitation
 
-```php
-// app/Deployment/Contracts/RepositoryManagerInterface.php
-interface RepositoryManagerInterface
-{
-    /**
-     * @return array<string>
-     */
-    public function plan(DeploymentContext $context): array;
-    public function apply(SiteContext $site, DeploymentContext $context): OperationResult;
-}
+The official Forge SDK v4 requires an organization slug and no longer exposes
+the v1 Git repository mutation methods. The Forge provider therefore requires
+`api_token`, `organization_slug`, and `server_id`; it creates/resolves the
+site and triggers deployment, but source setup remains a Forge-side
+precondition.
 
-// Repository data shape (from ProjectConfig):
-[
-    'provider' => 'github',  // or 'gitlab', 'bitbucket'
-    'name' => 'organization/repository',
-]
+## Acceptance criteria
 
-// Profile branch:
-// $context->profile->branch() → string (e.g., "main", "production")
-```
-
-## Edge Cases
-
-- **Missing provider/name:** `plan()` returns "Install repository: unknown:unknown" if not set
-- **Install failure:** `apply()` returns `OperationResult::fail()` with exception message
-- **Provider-specific payload differences:** Ploi and Forge have different API structures
-
-## Acceptance Criteria
-
-- [ ] `RepositoryManagerInterface` has `plan(DeploymentContext): array<string>` and `apply(SiteContext, DeploymentContext): OperationResult`
-- [ ] Ploi provider calls `$siteObj->repository()->install($provider, $branch, $repoName)`
-- [ ] Forge provider calls `$forge->installGitRepositoryOnSite($serverId, $siteId, [provider, repository, branch, composer])`
-- [ ] `plan()` includes provider, repository name, and branch in description
-- [ ] Failure during apply returns `OperationResult::fail()` with message
-
-## Open Questions / Potential Concerns
-
-- No repository uninstall/destroy operation defined (future feature)
-- No branch protection or deployment controls
-- No way to override composer behavior per-environment
-- Ploi and Forge differ in API structure — no shared abstraction beyond the interface
+- [ ] Ploi source installation remains covered by provider tests.
+- [ ] Forge never calls a removed v1 Git endpoint.
+- [ ] Forge plans and documentation state the preconfigured-source limitation.
+- [ ] Unsupported source mutation fails clearly instead of succeeding.
+- [ ] Provider-specific repository behavior is represented in the capability
+      matrix and website mirror.

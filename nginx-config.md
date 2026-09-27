@@ -47,7 +47,7 @@ When `$context->project->nginxConfig() === ''`, both `plan()` and `apply()` retu
 **FR-003 — Apply deploys raw config string**
 `apply()` passes the raw `nginxConfig` string directly to the provider's API without transformation:
 - Ploi: `$server->sites($siteId)->nginxConfiguration()->update($nginxConfig)`
-- Forge: `$forge->updateSiteNginxFile($serverId, $siteId, $nginxConfig)`
+- Forge: `$forge->updateSiteNginx($organizationSlug, $serverId, $siteId, $nginxConfig)`
 
 **FR-004 — Apply failures return OperationResult::fail**
 Any exception is caught and returns `OperationResult::fail()` with the exception message.

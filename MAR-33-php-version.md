@@ -79,7 +79,7 @@ public function apply(SiteContext $site, string $phpVersion): OperationResult {
 - [ ] `plan()` returns `["Set PHP version to: {$phpVersion}"]` when version is set
 - [ ] `apply('')` makes no API call and returns `OperationResult::ok()`
 - [ ] Ploi provider calls `$server->sites($site->siteId)->phpVersion($phpVersion)`
-- [ ] Forge provider calls `$forge->changeSitePHPVersion($site->serverId, $site->siteId, $phpVersion)`
+- [ ] Forge provider calls `$forge->updateSitePhp($organizationSlug, $serverId, $siteId, ['version' => 'php84'])` after normalizing the configured version
 - [ ] Provider exceptions result in `OperationResult::fail()`
 
 ## Open Questions / Potential Concerns

@@ -12,6 +12,16 @@ description: "**Issue:** MAR-38 **Date:** 2026-04-23 **Status:** In Review"
 
 The Ploi provider bridges Shipper's deployment pipeline to the Ploi API. It extends `AbstractProvider`, registers all 17 operation managers, and uses the `ploi/ploi-php-sdk` to provision sites, databases, SSL, queues, cron, and more on a Ploi-managed server.
 
+The current Composer package implementation also applies configured site PHP
+versions, NGINX configuration, queue workers, cron jobs, and daemons during
+post-apply. These operations use the official Ploi SDK and are covered by
+provider-level mocked tests; rollback remains unsupported because Ploi exposes
+no safe deployment rollback mutation.
+
+The provider partially supports server lifecycle configuration for existing-server
+reuse and managed-server creation. Cleanup requires live account verification and
+is restricted to the managed server identity derived by the provider.
+
 ## Current Implementation
 
 ### Key Classes / Files

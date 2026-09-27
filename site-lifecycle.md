@@ -12,6 +12,8 @@ description: "**Issue:** MAR-21 **Date:** 2026-04-24 **Status:** In Review"
 
 Shipper manages the complete lifecycle of sites on deployment providers (Ploi): creating, updating, deploying, and destroying sites. The lifecycle is driven by two primary flows — `ApplyDeploymentFlow` for create/update operations and `DestroyDeploymentFlow` for site teardown.
 
+Ploi partially supports the surrounding server lifecycle contract: Shipper can reuse an existing server or create a server for a deployment profile. Cleanup requires live account verification and uses the managed server identity derived by the provider.
+
 ## Current Implementation
 
 ### Key Classes / Files
