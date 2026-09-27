@@ -54,7 +54,7 @@ not emulate the removed API v1 operation.
 |---|---|---|
 | App deployment | Partial | Source setup is a Forge-side prerequisite. |
 | Domain management | Supported | Site domain resolution/creation is supported. |
-| SSL, databases, environment | Supported | Resources are applied through Forge API v2. |
+| SSL, databases, environment, PHP, NGINX | Supported | Resources are applied through Forge API v2. |
 | Workers, cron, observability | Supported | Existing resources are reused by name or command. |
 | Rollback | Unsupported | Forge API v2 exposes deployment history but no safe rollback mutation. |
 | Previews, server lifecycle | Unsupported | No ownership-safe implementation yet. |
