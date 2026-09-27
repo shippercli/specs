@@ -62,8 +62,8 @@ not emulate the removed API v1 operation.
 | SSL, databases, environment, PHP, NGINX | Supported | Resources are applied through Forge API v2. |
 | Workers, cron, observability | Supported | Existing resources are reused by name or command. |
 | Rollback | Unsupported | Forge API v2 exposes deployment history but no safe rollback mutation. |
-| Server lifecycle | Supported | Creation/reuse and opt-in cleanup are ownership-tagged. |
-| Previews | Supported | Profile-specific sites use ownership tags and explicit cleanup. |
+| Server lifecycle | Unsupported | Server lifecycle is not part of the merged provider contract. |
+| Previews | Unsupported | Preview cleanup is not implemented by the provider. |
 
 ## Safety requirements
 
