@@ -12,11 +12,12 @@ description: "**Issue:** MAR-39 **Date:** 2026-04-23 **Status:** In Review"
 
 `shippercli/provider-forge` is a Composer plugin built around the official
 `laravel/forge-sdk` v4 API v2 client. It is intentionally partial: it resolves
-or creates a site, triggers deployment, and protects cleanup with an ownership
-tag. It provisions configured databases, environment variables, queue workers,
-scheduled jobs, certificates, and application logs through the Forge API v2
-client. Deployment rollback and server lifecycle remain outside this provider
-contract.
+or creates a site, triggers deployment, and protects cleanup with ownership
+tags. It can also create or reuse a server from an explicit lifecycle map and
+optionally clean up only servers carrying its ownership tag. It provisions
+configured databases, environment variables, queue workers, scheduled jobs,
+certificates, and application logs through the Forge API v2 client. Deployment
+rollback remains outside this provider contract.
 
 | Component | Responsibility |
 |---|---|
@@ -31,7 +32,11 @@ The provider requires:
 
 - `api_token`
 - `organization_slug`
-- `server_id`
+- either `server_id` or a `server` lifecycle map
+
+The lifecycle map must include `provider`, `credential_id`, `name`, `type`,
+`size`, and `region`. Set `cleanup: true` only when Shipper should remove the
+owned server during destroy.
 
 The optional `ownership_tag` defaults to `shipper-managed`.
 
@@ -57,7 +62,8 @@ not emulate the removed API v1 operation.
 | SSL, databases, environment, PHP, NGINX | Supported | Resources are applied through Forge API v2. |
 | Workers, cron, observability | Supported | Existing resources are reused by name or command. |
 | Rollback | Unsupported | Forge API v2 exposes deployment history but no safe rollback mutation. |
-| Previews, server lifecycle | Unsupported | No ownership-safe implementation yet. |
+| Server lifecycle | Supported | Creation/reuse and opt-in cleanup are ownership-tagged. |
+| Previews | Unsupported | No ownership-safe implementation yet. |
 
 ## Safety requirements
 
