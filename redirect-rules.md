@@ -20,8 +20,8 @@ Redirect rules define URL path redirections from a source path to a destination 
 |------|------|
 | `app/Config/RedirectConfig.php` | Value object with from, to, type |
 | `app/Deployment/Contracts/RedirectManagerInterface.php` | Interface defining `plan()` and `apply()` |
-| `app/Deployment/Providers/Ploi/PloiRedirectManager.php` | Ploi implementation |
-| `app/Deployment/Providers/Forge/ForgeRedirectManager.php` | Forge implementation |
+| `shippercli/provider-ploi/src/PloiProvider.php` | Ploi implementation with idempotent creation and conflict protection |
+| `shippercli/provider-forge/src/ForgeProvider.php` | Forge API v2 does not claim redirect mutation |
 | `tests/Unit/Config/RedirectConfigTest.php` | Unit tests |
 
 ### RedirectConfig
@@ -65,7 +65,7 @@ interface RedirectManagerInterface
 
 **FR-002 — Apply creates redirects via provider API**
 - Ploi: `$server->sites($siteId)->redirects()->create($from, $to, $type)`
-- Forge: `$forge->createRedirectRule($serverId, $siteId, ['from' => $from, 'to' => $to, 'type' => $type])`
+- Forge: unsupported by the current API v2 provider contract; validation must fail clearly.
 
 **FR-003 — Redirect name used as array key**
 The `apply()` method receives `array<string, RedirectConfig>` — the string key is used in error messages: `"Failed to create redirect {$redirectName}: ..."`.
@@ -111,6 +111,7 @@ RedirectConfig::type() default: 'redirect'
 
 - [ ] `RedirectConfig` has correct default: `type='redirect'`
 - [ ] `plan()` generates one summary string per redirect
-- [ ] `apply()` calls the correct provider API method for each redirect
+- [ ] Ploi maps 301/302 and named types to its redirect API and reads `redirect_from`/`redirect_to`
+- [ ] Forge does not claim or invoke a removed redirect mutation endpoint
 - [ ] Exceptions are caught and returned as `OperationResult::fail()` with redirect name
-- [ ] Both providers are symmetric (same interface, same behavior)
+- [ ] Provider capability differences are explicit rather than presented as symmetric behavior

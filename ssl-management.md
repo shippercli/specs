@@ -20,8 +20,8 @@ SSL certificate management allows projects to enable HTTPS via Let's Encrypt or 
 |------|------|
 | `app/Config/SslConfig.php` | Value object holding `enabled` (bool) and `type` (string) |
 | `app/Deployment/Contracts/SslManagerInterface.php` | Interface defining `plan()` and `apply()` |
-| `app/Deployment/Providers/Ploi/PloiSslManager.php` | Ploi implementation using `$server->sites()->certificates()->create()` |
-| `app/Deployment/Providers/Forge/ForgeSslManager.php` | Forge implementation using `obtainLetsEncryptCertificate()` |
+| `shippercli/provider-ploi/src/PloiProvider.php` | Ploi implementation using the site certificate resource |
+| `shippercli/provider-forge/src/ForgeProvider.php` | Forge implementation using the API v2 domain/certificate client boundary |
 | `tests/Unit/Config/SslConfigTest.php` | Unit tests for SslConfig |
 
 ### SslConfig
@@ -66,8 +66,8 @@ The domain is read from `$context->profile->get('domain')` with a fallback to em
 
 **FR-004 — Apply creates certificate via provider API**
 `apply()` delegates to the provider's SDK:
-- Ploi: `$server->sites($siteId)->certificates()->create($siteDomain, $sslType)`
-- Forge: `obtainLetsEncryptCertificate($serverId, $siteId, ['domains' => [$siteDomain]])`
+- Ploi: `$server->sites($siteId)->certificates()->create($siteDomain, $sslType, $forceHttps)` when no matching certificate exists
+- Forge: create a domain and certificate through the API v2 client when no active certificate exists
 
 **FR-005 — Apply failures return OperationResult::fail**
 Any exception during apply is caught and returns `OperationResult::fail()` with the exception message.
@@ -102,6 +102,6 @@ apply(SiteContext $site, SslConfig $ssl): OperationResult
 - [ ] `SslConfig` defaults: `enabled=false`, `type='letsencrypt'`
 - [ ] `plan()` returns `[]` when SSL is disabled
 - [ ] `plan()` returns descriptive string when SSL is enabled
-- [ ] `apply()` calls correct Ploi/Forge SDK methods with site domain and SSL type
+- [ ] `apply()` calls the current Ploi and Forge provider client boundaries with the site domain and SSL type
 - [ ] Exceptions during apply are caught and returned as `OperationResult::fail()`
-- [ ] Both providers implement the same interface
+- [ ] Provider capability differences are explicit in the capability manifest

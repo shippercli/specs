@@ -20,8 +20,8 @@ Network rules manage firewall configurations per project, specifying ports, prot
 |------|------|
 | `app/Config/NetworkRuleConfig.php` | Value object with name, port, type, ruleType, fromIp |
 | `app/Deployment/Contracts/NetworkRuleManagerInterface.php` | Interface defining `plan()` and `apply()` |
-| `app/Deployment/Providers/Ploi/PloiNetworkRuleManager.php` | Ploi implementation |
-| `app/Deployment/Providers/Forge/ForgeNetworkRuleManager.php` | Forge implementation |
+| `shippercli/provider-ploi/src/PloiProvider.php` | Ploi implementation with ownership-safe reconciliation |
+| `shippercli/provider-forge/src/ForgeProvider.php` | Forge API v2 does not claim network-rule mutation |
 | `tests/Unit/Config/NetworkRuleConfigTest.php` | Unit tests |
 
 ### NetworkRuleConfig
@@ -67,10 +67,10 @@ interface NetworkRuleManagerInterface
 **FR-001 — Plan iterates all project network rules**
 `plan()` iterates `$context->project->networkRules()` and generates a summary string per rule: `"Create network rule: NAME (port PORT/TYPE, RULETYPE)"`.
 
-**FR-002 — Apply creates rules via provider API**
-Both providers accept the full `NetworkRuleConfig` object and extract individual fields:
+**FR-002 — Apply creates rules via supported provider API**
+Ploi accepts the full `NetworkRuleConfig` object and extracts individual fields:
 - Ploi: `$server->networkRules()->create($name, $port, $type, $fromIp, $ruleType)`
-- Forge: `$forge->createFirewallRule($serverId, ['name' => ..., 'port' => ..., 'type' => ..., 'ip_address' => $fromIp])`
+- Forge: unsupported by the current API v2 provider contract; validation must fail clearly.
 
 **FR-003 — Rule name is used as array key in apply**
 The `apply()` method receives `array<string, NetworkRuleConfig>` — the string key is the rule name and is used in error messages.
@@ -119,6 +119,7 @@ apply(SiteContext $site, array<string, NetworkRuleConfig> $rules): OperationResu
 
 - [ ] `NetworkRuleConfig` has correct default values: `type='tcp'`, `ruleType='allow'`, `fromIp=null`
 - [ ] `plan()` generates one summary string per network rule
-- [ ] `apply()` calls the correct provider API method for each rule
+- [ ] Ploi forwards `fromIp()` to the SDK source-IP argument and validates ports
+- [ ] Forge does not claim or invoke a removed firewall mutation endpoint
 - [ ] Exceptions are caught and returned as `OperationResult::fail()` with rule name
 - [ ] Provider implementations are symmetric (same interface, same behavior)

@@ -19,8 +19,8 @@ Nginx configuration management allows projects to specify raw Nginx config snipp
 | File | Role |
 |------|------|
 | `app/Deployment/Contracts/NginxConfigManagerInterface.php` | Interface defining `plan()` and `apply()` |
-| `app/Deployment/Providers/Ploi/PloiNginxConfigManager.php` | Ploi implementation |
-| `app/Deployment/Providers/Forge/ForgeNginxConfigManager.php` | Forge implementation |
+| `shippercli/provider-ploi/src/PloiProvider.php` | Ploi implementation using the raw full-vhost configuration |
+| `shippercli/provider-forge/src/ForgeProvider.php` | Forge API v2 does not claim NGINX mutation |
 
 ### NginxConfigManagerInterface
 
@@ -47,7 +47,7 @@ When `$context->project->nginxConfig() === ''`, both `plan()` and `apply()` retu
 **FR-003 — Apply deploys raw config string**
 `apply()` passes the raw `nginxConfig` string directly to the provider's API without transformation:
 - Ploi: `$server->sites($siteId)->nginxConfiguration()->update($nginxConfig)`
-- Forge: `$forge->updateSiteNginx($organizationSlug, $serverId, $siteId, $nginxConfig)`
+- Forge: unsupported by the current API v2 provider contract; validation must fail clearly.
 
 **FR-004 — Apply failures return OperationResult::fail**
 Any exception is caught and returns `OperationResult::fail()` with the exception message.
@@ -85,5 +85,6 @@ $context->project->nginxConfig(): string  # raw Nginx config or ''
 - [ ] `plan()` returns `[]` when nginx config is empty string
 - [ ] `plan()` returns `['Update Nginx configuration']` when nginx config is non-empty
 - [ ] `apply()` does not transform the config string
-- [ ] Both providers use their respective SDK methods for nginx config update
+- [ ] Ploi compares the current full configuration and updates it only when changed
+- [ ] Forge does not claim or invoke a removed NGINX mutation endpoint
 - [ ] Exceptions are caught and returned as `OperationResult::fail()`
