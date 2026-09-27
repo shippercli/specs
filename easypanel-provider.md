@@ -4,6 +4,9 @@ description: "EasyPanel provider capability contract and ownership rules."
 
 # Spec: EasyPanel Provider
 
+**Date:** 2026-09-27
+**Status:** In Review
+
 ## Current implementation
 
 `shippercli/provider-easypanel` uses the EasyPanel API to manage an owned
