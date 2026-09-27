@@ -13,11 +13,11 @@ description: "**Issue:** MAR-39 **Date:** 2026-04-23 **Status:** In Review"
 `shippercli/provider-forge` is a Composer plugin built around the official
 `laravel/forge-sdk` v4 API v2 client. It is intentionally partial: it resolves
 or creates a site, triggers deployment, and protects cleanup with ownership
-tags. It can also create or reuse a server from an explicit lifecycle map and
-optionally clean up only servers carrying its ownership tag. It provisions
-configured databases, environment variables, queue workers, scheduled jobs,
-certificates, and application logs through the Forge API v2 client. Deployment
-rollback remains outside this provider contract.
+tags. It provisions configured databases, environment variables, queue workers,
+scheduled jobs, certificates, and application logs through the Forge API v2
+client. Owned preview sites can be enumerated and removed by the core orphan
+cleanup flow. Deployment rollback, server lifecycle, and automatic cleanup of
+server-level databases remain outside this provider contract.
 
 | Component | Responsibility |
 |---|---|
@@ -32,11 +32,7 @@ The provider requires:
 
 - `api_token`
 - `organization_slug`
-- either `server_id` or a `server` lifecycle map
-
-The lifecycle map must include `provider`, `credential_id`, `name`, `type`,
-`size`, and `region`. Set `cleanup: true` only when Shipper should remove the
-owned server during destroy.
+- `server_id`
 
 The optional `ownership_tag` defaults to `shipper-managed`.
 
@@ -48,6 +44,7 @@ The optional `ownership_tag` defaults to `shipper-managed`.
 4. Refuse destruction unless the returned site contains the ownership tag.
 5. Apply configured databases, environment variables, workers, scheduled jobs,
    and certificates before deployment.
+6. Enumerate and remove only owned preview sites during orphan cleanup.
 
 Forge API v2 removed Git repository mutation endpoints. The site source must
 be configured in Forge before Shipper triggers deployment; the provider must
@@ -59,11 +56,12 @@ not emulate the removed API v1 operation.
 |---|---|---|
 | App deployment | Partial | Source setup is a Forge-side prerequisite. |
 | Domain management | Supported | Site domain resolution/creation is supported. |
-| SSL, databases, environment, PHP, NGINX | Supported | Resources are applied through Forge API v2. |
+| SSL, databases, environment | Supported | Resources are applied through Forge API v2. |
+| PHP, NGINX, redirects, network rules, aliases | Unsupported | The current Forge API v2 provider does not claim these mutations. |
 | Workers, cron, observability | Supported | Existing resources are reused by name or command. |
 | Rollback | Unsupported | Forge API v2 exposes deployment history but no safe rollback mutation. |
 | Server lifecycle | Unsupported | Server lifecycle is not part of the merged provider contract. |
-| Previews | Unsupported | Preview cleanup is not implemented by the provider. |
+| Previews | Partial | Owned preview sites participate in orphan cleanup; database ownership is not exposed safely by Forge API v2. |
 
 ## Safety requirements
 

@@ -19,8 +19,8 @@ Domain aliases allow a deployment to associate additional domain names with a pr
 | File | Role |
 |------|------|
 | `app/Deployment/Contracts/AliasManagerInterface.php` | Interface defining `plan()` and `apply()` |
-| `app/Deployment/Providers/Ploi/PloiAliasManager.php` | Ploi implementation |
-| `app/Deployment/Providers/Forge/ForgeAliasManager.php` | Forge implementation |
+| `shippercli/provider-ploi/src/PloiProvider.php` | Ploi implementation |
+| `shippercli/provider-forge/src/ForgeProvider.php` | Forge API v2 does not claim alias mutation |
 
 ### AliasManagerInterface
 
@@ -49,7 +49,7 @@ When `$context->profile->aliases() === []`, both `plan()` and `apply()` return e
 
 **FR-003 — Apply passes alias array directly to provider API**
 - Ploi: `$server->sites($siteId)->alias()->create($aliases)` — accepts array of strings
-- Forge: `$forge->addSiteAliases($serverId, $siteId, $aliases)`
+- Forge: unsupported by the current API v2 provider contract; validation must fail clearly.
 
 **FR-004 — Apply failures return OperationResult::fail**
 Any exception is caught and returns `OperationResult::fail()` with a generic message: `"Failed to configure domain aliases: {$e->getMessage()}"` (rule name not available since apply receives array).
@@ -76,5 +76,6 @@ apply(SiteContext $site, array<int, string> $aliases): OperationResult
 - [ ] `plan()` returns `[]` when aliases is empty array
 - [ ] `plan()` returns properly pluralized summary with correct count
 - [ ] `apply()` passes the alias array directly to provider without transformation
-- [ ] Both providers use their respective SDK methods
+- [ ] Ploi uses its SDK alias resource
+- [ ] Forge does not claim or invoke a removed alias mutation endpoint
 - [ ] Exceptions are caught and returned as `OperationResult::fail()`
