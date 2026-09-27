@@ -18,6 +18,10 @@ post-apply. These operations use the official Ploi SDK and are covered by
 provider-level mocked tests; rollback remains unsupported because Ploi exposes
 no safe deployment rollback mutation.
 
+The provider also supports server lifecycle configuration for existing-server
+reuse and managed-server creation. Cleanup is restricted to servers explicitly
+marked as Shipper-managed, including profile-specific preview infrastructure.
+
 ## Current Implementation
 
 ### Key Classes / Files
