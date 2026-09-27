@@ -63,7 +63,7 @@ not emulate the removed API v1 operation.
 | Workers, cron, observability | Supported | Existing resources are reused by name or command. |
 | Rollback | Unsupported | Forge API v2 exposes deployment history but no safe rollback mutation. |
 | Server lifecycle | Supported | Creation/reuse and opt-in cleanup are ownership-tagged. |
-| Previews | Unsupported | No ownership-safe implementation yet. |
+| Previews | Supported | Profile-specific sites use ownership tags and explicit cleanup. |
 
 ## Safety requirements
 
