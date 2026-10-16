@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-35 **Date:** 2026-04-23 **Status:** In Review"
+description: "Deployment coordination, provider operations, status checks and log retrieval."
 ---
 
 # Spec: Deployment Execution

@@ -1,5 +1,5 @@
 ---
-description: "**Date:** 2026-04-26 **Status:** Draft"
+description: "Historical testing gaps, proposed coverage strategy and acceptance targets."
 ---
 
 # Spec: Shipper Test Coverage Initiative

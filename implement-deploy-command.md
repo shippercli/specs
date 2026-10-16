@@ -1,5 +1,5 @@
 ---
-description: "**Date:** 2026-04-26 **Status:** Draft"
+description: "Design proposal for deploy-command validation, planning and execution responsibilities."
 ---
 
 # Spec: Implement DeployCommand

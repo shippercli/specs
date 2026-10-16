@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-21 **Date:** 2026-04-24 **Status:** In Review"
+description: "Site creation, updates, deployment and destruction requirements."
 ---
 
 # Spec: Site Lifecycle Management

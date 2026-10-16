@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-38 **Date:** 2026-04-23 **Status:** In Review"
+description: "Ploi deployment operations, configuration and provider integration design."
 ---
 
 # Spec: Ploi Provider
