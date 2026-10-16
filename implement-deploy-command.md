@@ -1,5 +1,5 @@
 ---
-description: "Design proposal for deploy-command validation, planning and execution responsibilities."
+description: "Unimplemented proposal for redeploying an existing site without rerunning provisioning."
 ---
 
 # Spec: Implement DeployCommand
@@ -7,55 +7,87 @@ description: "Design proposal for deploy-command validation, planning and execut
 **Date:** 2026-04-26
 **Status:** Draft
 
-## Overview
+## Current source and command availability
 
-`DeployCommand` currently exists as a stub/no-op. This spec defines what it should do.
+Reviewed on 2026-10-16 against CLI main revision
+[`cb86caeef6704e14990e5e4f324d66e63df25d52`](https://github.com/shippercli/cli/tree/cb86caeef6704e14990e5e4f324d66e63df25d52).
+That source contains `ApplyCommand`, `ApplyDeploymentFlow` and
+`ExecuteDeploymentAction`. It does not contain `app/Commands/DeployCommand.php`.
+The earlier claim that a current DeployCommand is a stub/no-op was incorrect.
 
-## Current State
+A production-installed local integration of the open CLI audit PRs at
+`e16ba2b58b643e2de0272fe665d03f201db811ed` also lists `apply`, not `deploy`, in
+`shipper list --raw`. That fixture is not a published release.
 
-```php
-public function handle(): int
-{
-    $this->info('Starting deployment...');
-    // Deployment logic goes here  <-- EMPTY STUB
-    $this->comment('Deployment completed successfully!');
-    return self::SUCCESS;
-}
-```
-
-## Proposed Behavior
-
-`shipper deploy` should trigger a new deployment for an already-provisioned site without re-running the full 15-step apply sequence.
-
-### Command Interface
+Use the installed CLI's command help to determine available operations. The
+reviewed deployment entry point is:
 
 ```bash
-shipper deploy <project> [--profile=<name>] [--config=<path>]
+shipper apply <project> --profile=production --config=shipper.yml
 ```
 
-### Behavior
+`apply` validates and plans before execution and normally asks for confirmation.
+`--force` skips that prompt; it is not mandatory for an interactive deployment.
+It does not authorize bypassing provider validation or ownership checks. The
+proposed blocked-plan enforcement is tracked in
+[CLI PR #154](https://github.com/shippercli/cli/pull/154); do not infer that every
+released version enforces that proposal.
 
-1. Load configuration for the project/profile
-2. Validate project exists (same validation as `plan`/`apply`)
-3. Identify the target site (domain → site ID mapping via `GetAllSitesAction`)
-4. Trigger deployment via `DeploymentExecutorInterface` directly
-5. Poll for deployment logs via `DeploymentLogReaderInterface`
-6. Output deployment status
+The apply path can provision and update resources. It must not be presented as
+an existing-site-only redeploy command.
 
-### Difference from `apply`
+## Proposed behavior, not an available command
 
-| Aspect | `apply` | `deploy` |
-|--------|---------|----------|
-| Creates site | Yes | No |
-| Configures PHP/Nginx/SSL | Yes | No |
-| Triggers deployment | Yes | Yes |
-| Requires `--force` | Yes | Yes |
-| Fails if site doesn't exist | N/A | Yes |
+A future `shipper deploy` could trigger deployment for an existing owned site
+without rerunning provisioning. Its interface is a proposal:
 
-## Acceptance Criteria
+```text
+shipper deploy <project> [--profile=<name>] [--config=<path>] [--force]
+```
 
-- [ ] `shipper deploy <project>` triggers deployment for existing site
-- [ ] Returns error if site does not exist
-- [ ] Shows live deployment logs during polling
-- [ ] Returns exit 0 on success, exit 1 on failure
-- [ ] Tests cover: site exists, site not found, deployment success, deployment failure
+Before implementation, define an explicit provider operation or contract for
+redeploying an existing target. Calling the general provider `apply()` method is
+insufficient because it can create resources or change configuration. Historical
+manager interfaces such as `DeploymentExecutorInterface` are not a substitute
+for verifying the current plugin API.
+
+### Required sequence
+
+1. Load and validate the selected project and profile.
+2. Resolve a supported provider operation and inspect the target read-only.
+3. Prove exact project/profile ownership and a single existing target. Refuse
+   absence, collisions, ambiguous inventory and failed evidence reads.
+4. Show the intended existing-target action and obtain confirmation unless
+   `--force` was supplied. Force must not bypass the preceding checks.
+5. Trigger only the reviewed redeployment operation and wait for its result.
+6. Report provider status and available redacted logs. A timeout is failure, not
+   proof that the remote deployment has stopped.
+
+### Difference from apply
+
+| Behavior | Reviewed apply command | Proposed deploy command |
+| --- | --- | --- |
+| May provision resources | Yes, according to provider behavior | Must not |
+| May configure environment, workloads or runtime | Yes, according to provider support | Must not implicitly |
+| Triggers deployment | Through provider apply | Through an explicit existing-target operation |
+| Confirmation | Normally interactive; `--force` skips prompt | Same proposed semantics |
+| Missing target | Provider may create it | Must refuse |
+| Ownership checks | Required by provider acceptance rules | Required before triggering deployment |
+
+## Acceptance criteria for a future implementation
+
+- [ ] Define the provider API and advertise unsupported operations clearly.
+- [ ] Register and document the command only when implemented.
+- [ ] Refuse missing, unowned, cross-scope or ambiguous targets without mutation.
+- [ ] Verify no site/database/workload creation or configuration writes occur.
+- [ ] Verify confirmation cancellation performs no deployment.
+- [ ] Verify `--force` cannot bypass ownership or validation failures.
+- [ ] Return success only for a confirmed successful provider result; return failure
+      for failed status, unreadable required evidence or timeout.
+- [ ] Document whether logs are streamed or collected and redact secrets.
+- [ ] Test success, missing target, provider rejection, failed deployment, timeout
+      and remote deployment continuing after a local timeout.
+- [ ] Verify the complete behavior against supported live provider accounts.
+
+The current `apply` command and a passing command-list check do not satisfy this
+future redeploy contract. This document remains a draft feature proposal.
