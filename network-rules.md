@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-28 **Date:** 2026-04-23 **Status:** In Review"
+description: "Firewall rule configuration, protocols, ports and provider-specific translation."
 ---
 
 # Spec: Network Rules

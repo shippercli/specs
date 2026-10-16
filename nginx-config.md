@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-29 **Date:** 2026-04-23 **Status:** In Review"
+description: "Custom Nginx configuration requirements and provider operations."
 ---
 
 # Spec: Nginx Configuration

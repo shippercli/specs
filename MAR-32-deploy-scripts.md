@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-32 **Date:** 2026-04-24 **Status:** In Review"
+description: "Deploy script selection, profile overrides and placeholder interpolation."
 ---
 
 # Spec: Deploy Scripts

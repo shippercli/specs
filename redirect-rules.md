@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-31 **Date:** 2026-04-23 **Status:** In Review"
+description: "URL redirect configuration and provider-specific creation requirements."
 ---
 
 # Spec: Redirect Rules

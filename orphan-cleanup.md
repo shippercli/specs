@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-37 **Date:** 2026-04-24 **Status:** In Review"
+description: "Finding closed pull-request previews and cleaning up their owned resources."
 ---
 
 # Spec: Orphan Cleanup — PR Preview Environments

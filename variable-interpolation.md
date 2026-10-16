@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-42 **Date:** 2026-04-23 **Status:** In Review"
+description: "Dynamic placeholders for project, profile and environment-specific resource names."
 ---
 
 # Spec: Variable Interpolation

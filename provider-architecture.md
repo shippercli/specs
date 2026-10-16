@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-20 **Date:** 2026-04-23 **Status:** In Review"
+description: "Composer provider plugins, CLI responsibilities and capability declarations."
 ---
 
 # Spec: Provider Architecture
