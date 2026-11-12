@@ -1,5 +1,5 @@
 ---
-description: "Composer-isolated GitHub Action installation, provider discovery, inputs, caching, and workflow requirements."
+description: "Composer-isolated GitHub Action installation, provider discovery, inputs, and workflow requirements."
 ---
 
 # Spec: GitHub Actions Integration
@@ -33,11 +33,10 @@ The application does not need Shipper in its `composer.json`, `composer.lock`, o
 
 1. Sets up PHP and Composer independently of the application.
 2. Canonicalizes and validates the provider package list.
-3. Installs `shippercli/cli` and all providers in one isolated Composer tool directory.
-4. Caches that tool installation by OS, PHP version, CLI constraint, and provider list.
-5. Confirms requested packages are visible as `shipper-plugin` packages through Composer's `InstalledVersions`.
-6. Runs `vendor/bin/shipper --version`, allowlists the requested command, and passes inputs through environment variables and a bash argument array.
-7. Runs from `working-directory` without modifying the application's Composer files.
+3. Resolves the requested constraints and installs `shippercli/cli` and all providers in a fresh Composer project under `RUNNER_TEMP` on each invocation.
+4. Confirms requested packages are visible as `shipper-plugin` packages through Composer's `InstalledVersions`.
+5. Runs `vendor/bin/shipper --version`, allowlists the requested command, and passes inputs through environment variables and a bash argument array.
+6. Runs from `working-directory` without modifying the application's Composer files.
 
 ## Reference
 
@@ -45,7 +44,7 @@ Pin consumers to a release tag or commit SHA, not `main`:
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: shippercli/actions/.github/actions/shipper@c2c276e12f831ba2c3377a063d579fede5cc5ecc
+- uses: shippercli/actions/.github/actions/shipper@2649f5132e10d405dddd77198e42c67035cfff4c
   with:
     command: apply
     project: api
@@ -78,8 +77,8 @@ Every requested package must be installed with Composer type `shipper-plugin` an
 **FR-003 - Safe argument handling**
 Inputs are passed through `env:`; commands are allowlisted and arguments are built as a bash array. The action does not evaluate free-form shell input.
 
-**FR-004 - Cache isolation**
-The cache key represents the action toolchain only and never hashes the application's lockfile.
+**FR-004 - Fresh dependency resolution**
+Each invocation resolves the requested package constraints in a new Composer tool directory.
 
 **FR-005 - Exit code propagation**
 The action writes `exit-code` to `GITHUB_OUTPUT` and returns the CLI exit code.
@@ -91,7 +90,7 @@ The action writes `exit-code` to `GITHUB_OUTPUT` and returns the CLI exit code.
 - Conflicting or unavailable Composer constraints fail the single Composer install.
 - Unsupported commands fail before the CLI is invoked.
 - A missing CLI binary or failed `--version` check fails the action.
-- Duplicate provider lines are deduplicated before installation and cache hashing.
+- Duplicate provider lines are deduplicated before installation.
 
 ## Acceptance Criteria
 
@@ -100,7 +99,7 @@ The action writes `exit-code` to `GITHUB_OUTPUT` and returns the CLI exit code.
 - [ ] Application Composer files and `vendor` are not modified.
 - [ ] Requested providers are confirmed through `InstalledVersions::getInstalledPackagesByType('shipper-plugin')`.
 - [ ] Inputs use environment variables and argv; `command` is allowlisted.
-- [ ] Cache identity includes OS, PHP, CLI constraint, and canonical providers.
+- [ ] Repeated invocations with identical constraints use distinct tool directories and resolve dependencies each time.
 - [ ] Examples require `providers` and pin `shippercli/actions` to a tag or SHA.
 - [ ] Preview workflows pass `GITHUB_PR_NUMBER` and `GITHUB_HEAD_REF`.
 
