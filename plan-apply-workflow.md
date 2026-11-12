@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-36 **Date:** 2026-04-23 **Status:** In Review"
+description: "Read-only planning, explicit actions and execution of deployment changes."
 ---
 
 # Spec: Plan/Apply Workflow

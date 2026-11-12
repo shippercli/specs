@@ -1,5 +1,5 @@
 ---
-description: "**Date:** 2026-04-26 **Status:** Draft"
+description: "Proposed recovery and cleanup behavior when deployment fails after creating resources."
 ---
 
 # Spec: Deployment Atomic Rollback

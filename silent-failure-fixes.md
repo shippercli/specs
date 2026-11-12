@@ -1,5 +1,5 @@
 ---
-description: "**Date:** 2026-04-26 **Status:** Draft"
+description: "Historical silent-failure findings and proposed error-reporting improvements."
 ---
 
 # Spec: Silent Failure Fixes — DB Deletion, Orphan Cleanup Errors

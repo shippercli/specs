@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-39 **Date:** 2026-04-23 **Status:** In Review"
+description: "Forge plugin capabilities, API v2 integration, source prerequisites and ownership requirements."
 ---
 
 # Spec: Forge Provider

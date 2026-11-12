@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-43 **Date:** 2026-04-23 **Status:** In Review"
+description: "PHP typing conventions, static analysis and code-style requirements."
 ---
 
 # Spec: Strict Type System

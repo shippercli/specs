@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-23 **Date:** 2026-04-24 **Status:** In Review"
+description: "Project/profile environment merging, override rules and literal value preservation."
 ---
 
 # Spec: Environment Variables

@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-25 **Date:** 2026-04-24 **Status:** In Review"
+description: "Scheduled task configuration, frequency expressions and provider lifecycle operations."
 ---
 
 # Spec: Cron Jobs

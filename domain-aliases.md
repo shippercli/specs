@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-30 **Date:** 2026-04-23 **Status:** In Review"
+description: "Additional domain configuration and provider alias-management requirements."
 ---
 
 # Spec: Domain Aliases

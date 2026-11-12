@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-24 **Date:** 2026-04-24 **Status:** In Review"
+description: "Queue worker configuration, provider operations and process settings."
 ---
 
 # Spec: Queue Workers

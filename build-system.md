@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-41 **Date:** 2026-04-24 **Status:** In Review"
+description: "PHAR compilation, release distribution and GitHub Action consumption."
 ---
 
 # Spec: Build System — PHAR Compilation and Distribution

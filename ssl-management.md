@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-27 **Date:** 2026-04-23 **Status:** In Review"
+description: "HTTPS certificate configuration and provider-specific certificate operations."
 ---
 
 # Spec: SSL Management

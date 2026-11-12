@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-22 **Date:** 2026-04-24 **Status:** In Review"
+description: "Database lifecycle requirements, connection delivery, naming and cleanup behavior."
 ---
 
 # Spec: Database Management

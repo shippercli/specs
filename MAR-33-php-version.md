@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-33 **Date:** 2026-04-24 **Status:** In Review"
+description: "PHP runtime selection and provider-specific version management limitations."
 ---
 
 # Spec: PHP Version

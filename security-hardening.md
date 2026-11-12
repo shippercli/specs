@@ -1,5 +1,5 @@
 ---
-description: "**Date:** 2026-04-26 **Status:** Draft"
+description: "Historical security findings and proposed deployment robustness improvements."
 ---
 
 # Spec: Security Hardening — Path Traversal, Env Validation, Rate Limit Retry

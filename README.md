@@ -1,5 +1,5 @@
 ---
-description: "![Shipper Banner](https://raw.githubusercontent.com/shippercli/assets/main/banner.png)"
+description: "Design specifications and historical implementation notes for Shipper CLI features and architecture."
 ---
 
 # Shipper CLI Specifications
@@ -7,6 +7,11 @@ description: "![Shipper Banner](https://raw.githubusercontent.com/shippercli/ass
 ![Shipper Banner](https://raw.githubusercontent.com/shippercli/assets/main/banner.png)
 
 Detailed specifications for Shipper CLI features and architecture.
+
+These documents include design proposals and historical implementation notes.
+Issue dates and review statuses are retained in each document. Statements about
+implementation must be checked against the current CLI/provider source and
+release documentation before being treated as supported behavior.
 
 ## Specifications
 

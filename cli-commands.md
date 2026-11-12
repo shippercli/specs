@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-19 **Date:** 2026-04-23 **Status:** In Review"
+description: "Command responsibilities for validation, planning, deployment, destruction and preview cleanup."
 ---
 
 # Spec: CLI Commands

@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-18 **Date:** 2026-04-23 **Status:** In Review"
+description: "YAML configuration structure, typed values and environment-variable interpolation."
 ---
 
 # Spec: Configuration System

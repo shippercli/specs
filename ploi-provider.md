@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-38 **Date:** 2026-04-23 **Status:** In Review"
+description: "Ploi plugin architecture, deployment operations, source baseline and audited lifecycle limitations."
 ---
 
 # Spec: Ploi Provider
@@ -8,145 +8,121 @@ description: "**Issue:** MAR-38 **Date:** 2026-04-23 **Status:** In Review"
 **Date:** 2026-04-23
 **Status:** In Review
 
-## Overview
+## Source scope
 
-The Ploi provider bridges Shipper's deployment pipeline to the Ploi API. It extends `AbstractProvider`, registers all 17 operation managers, and uses the `ploi/ploi-php-sdk` to provision sites, databases, SSL, queues, cron, and more on a Ploi-managed server.
+Reviewed on 2026-10-16 against provider main revision
+[`fd60b25bfa4f3df58f0dc61639f3b4a4f6a05505`](https://github.com/shippercli/provider-ploi/tree/fd60b25bfa4f3df58f0dc61639f3b4a4f6a05505).
+This is a source baseline, not a claim about the installed or latest released
+package. Proposed ownership, response-validation and connection-delivery changes
+are in [provider PR #26](https://github.com/shippercli/provider-ploi/pull/26), reviewed
+at `3d7fc1418e089de372cdb514a6558b5d4bfc8455`; they remain unmerged.
 
-The current Composer package implementation also applies configured site PHP
-versions, NGINX configuration, queue workers, cron jobs, and daemons during
-post-apply. These operations use the official Ploi SDK and are covered by
-provider-level mocked tests; rollback remains unsupported because Ploi exposes
-no safe deployment rollback mutation.
+## Package architecture
 
-The provider partially supports server lifecycle configuration for existing-server
-reuse and managed-server creation. Cleanup requires live account verification and
-is restricted to the managed server identity derived by the provider.
+`shippercli/provider-ploi` is a Composer package of type `shipper-plugin`, requiring
+PHP 8.3+, `ploi/ploi-php-sdk` 1.9-compatible releases and `shippercli/contracts` 1.2.
+Its `extra.shipper-plugin` metadata identifies `ShipperCli\ProviderPloi\PloiPlugin`.
+The plugin maps provider key `ploi` to `ShipperCli\ProviderPloi\PloiProvider`.
 
-## Current Implementation
+The provider implements shared deployment, capabilities, status and logs contracts.
+The CLI discovers installed plugins through Composer and adapts their contract
+implementations. The Ploi package does not extend a CLI `AbstractProvider` or
+register a set of manager classes inside the CLI.
 
-### Key Classes / Files
+| Package file | Responsibility |
+| --- | --- |
+| `src/PloiPlugin.php` | Advertise the provider mapping. |
+| `src/PloiProvider.php` | Validate, plan, provision/configure, deploy, inspect and clean up resources. |
+| `src/ServerLifecycleClientInterface.php` | Server-lifecycle client boundary. |
+| `src/PloiServerLifecycleClient.php` | Ploi server-lifecycle operations. |
 
-| File | Class | Responsibility |
-|------|-------|----------------|
-| `PloiProvider.php` | `PloiProvider` | Entry point; registers all 17 operations; extends `AbstractProvider` |
-| `PloiClientFactory.php` | `PloiClientFactory` | Lazily creates `Ploi` SDK client; exposes server ID + timeout |
-| `PloiSiteManager.php` | `PloiSiteManager` | Find or create site by domain |
-| `PloiRepositoryManager.php` | `PloiRepositoryManager` | Install git repository on site |
-| `PloiDatabaseManager.php` | `PloiDatabaseManager` | Create databases with interpolated names |
-| `PloiDeploymentExecutor.php` | `PloiDeploymentExecutor` | Trigger deployment + poll with log inspection |
-| `PloiDeploymentLogReader.php` | `PloiDeploymentLogReader` | Fetch deployment log lines |
-| `PloiSslManager.php` | `PloiSslManager` | Provision SSL certificate |
-| `PloiEnvironmentManager.php` | `PloiEnvironmentManager` | Write `.env` file viaMergesEnvironment |
-| `PloiDeployScriptManager.php` | `PloiDeployScriptManager` | Set deployment script |
-| `PloiQueueManager.php` | `PloiQueueManager` | Configure queue workers |
-| `PloiCronManager.php` | `PloiCronManager` | Configure scheduled jobs |
-| `PloiRedirectManager.php` | `PloiRedirectManager` | HTTP redirect rules |
-| `PloiDaemonManager.php` | `PloiDaemonManager` | Background daemon processes |
-| `PloiNetworkRuleManager.php` | `PloiNetworkRuleManager` | Firewall rules |
-| `PloiPhpVersionManager.php` | `PloiPhpVersionManager` | PHP version selection |
-| `PloiNginxConfigManager.php` | `PloiNginxConfigManager` | Custom Nginx configuration |
-| `PloiAliasManager.php` | `PloiAliasManager` | Domain aliases |
-| `PloiServerSiteList.php` | `PloiServerSiteList` | List all sites on server |
+The audit branch additionally introduces `src/PloiApiClient.php` for strict
+transport/response behavior. Do not assume that file exists in the main baseline.
 
-### PloiProvider: Additional Public API
+## Public contract and configuration
 
-```php
-final class PloiProvider extends AbstractProvider {
-    use InterpolatesNames;
+The provider exposes `getName()`, `capabilities()`, `validate()`, `plan()`,
+`apply()`, `destroy()`, `getLastError()`, `postApply()`, `status()` and `logs()`.
+Site listing and scoped deletion helpers support lifecycle orchestration.
+`apply()` and `destroy()` return booleans; they do not return the historical
+`SiteResult` or `OperationResult` objects described by earlier designs.
 
-    private PloiClientFactory $factory;
+The SDK factory method `getClient()` is protected. Server/site state and the
+internal deployment-log helper are not the public SDK access API.
 
-    public function getName(): string  // 'ploi'
-    public function getServerId(): string
-    public function getClient(): Ploi  // exposes SDK directly
-    public function getLastSiteId(): int
-    public function getDeploymentLogs(int $serverId, int $siteId): array<string>  // backwards-compat helper
+Core validation requires a nonempty resolved API key, a server target, a profile
+domain, and repository provider/name. A static server ID is used when no server
+lifecycle configuration is supplied; lifecycle mode has its own validation.
+Consult the provider README and installed version for the complete field schema.
+The main baseline's `deployment_timeout` defaults to 60 seconds.
 
-    protected function registerOperations(): void   // registers all 17 managers
-    protected function handleException(\Exception $e): string  // maps Ploi SDK exceptions
-    protected function planDatabases(array<DatabaseConfig> $databases, string $projectName, string $profileName): array  // InterpolatesNames
-}
-```
+## Deployment flow
 
-### Validation Rules (in addition to AbstractProvider base validation)
+1. Validate local configuration and resolve the target server.
+2. Inspect the target site or create it, then configure its repository as needed.
+3. Provision declared databases and configure the site's deployment settings.
+4. Trigger deployment through the Ploi SDK.
+5. Poll site state and inspect deployment logs for failure until completion or
+   timeout. Timeout is a failure and does not imply the remote deployment stopped.
 
-| Field | Rule |
-|-------|------|
-| `config['api_key']` | Required, non-empty string |
-| `config['server_id']` | Required, numeric-only (digits) |
-| `profile['domain']` | Required, non-empty |
-| `project['repository']` | Must have `provider` (github/gitlab/bitbucket/custom) and `name` (username/repo) |
+The main source implements site PHP version, Nginx configuration, aliases,
+redirects, firewall rules, queues, scheduled jobs and daemons as provider methods.
+A capability declaration or method's presence alone does not prove successful
+operation on a live account. API access and provider support remain prerequisites.
 
-### Exception Mapping
+The audit proposal changes existing-resource checks and runs configuration steps
+sequentially, refusing later mutations after a prerequisite fails. These are audit
+changes, not guarantees supplied by the main baseline above.
 
-| Exception class | Message prefix |
-|----------------|---------------|
-| `\Ploi\Exceptions\Http\Unauthenticated` | `"Authentication failed: Invalid Ploi API key."` |
-| `\Ploi\Exceptions\Http\NotFound` | `"Resource not found: Server ID {id} may not exist or you don't have access."` |
-| `\Ploi\Exceptions\Http\NotValid` | `"Validation error: {message}"` |
-| Other `Exception` | `"Deployment error: {message} (Type: {class})"` (via parent) |
+## Ownership and database acceptance requirements
 
-### SiteManager apply() Behavior
+- Existing sites require successful, readable evidence matching the exact project
+  and profile before ownership-inferred mutation or cleanup.
+- Parse complete effective environment assignments; an unfinished trailing value
+  or explicit failed API response must not establish ownership.
+- Multiple databases require distinct connection-variable mappings. Preserve
+  existing credentials on re-apply; do not rotate them implicitly.
+- Deliver each confirmed connection before creating the next database and verify
+  stored selected values before dependent configuration or deployment.
+- Preserve unrelated environment content. Refuse unreadable or malformed content
+  rather than replacing it as if it were empty.
+- A fresh retry after a later creation fails must reuse earlier confirmed resources
+  and credentials, creating only missing resources.
+- Never expose generated/configured secrets in plans, logs or diagnostics.
 
-1. Fetch all sites on server via `GET /servers/{id}/sites`
-2. Match by `domain` property
-3. If found: return `SiteResult::found(site->id)` — does NOT reinstall repository
-4. If not found: create via `POST /servers/{id}/sites` with `web_directory` and `project_root`
-5. If `id` is 0 or null in response: return `SiteResult::fail('Invalid response')`
+These requirements are proposed in
+[contracts PR #5](https://github.com/shippercli/contracts/pull/5). The audited
+implementation has local unit and real-SDK simulated HTTP evidence, including
+partial retry and environment readback. Live database authentication and complete
+account lifecycle behavior remain unverified.
 
-### DeploymentExecutor apply() Behavior (Ploi)
+## Limitations and unresolved behavior
 
-1. Call `site->deployment()->deploy()` to trigger deployment
-2. Poll `GET /servers/{id}/sites/{id}` every 5 seconds up to `deployment_timeout` (default 60s)
-3. When `deploying === false`:
-   - If `status === 'deploy-failed'`: fetch logs, return `OperationResult::fail` with log excerpt
-   - Otherwise: scan log lines for keywords (`deployment failed`, `fatal error`, etc.)
-   - If any keyword found: return `OperationResult::fail`
-   - Else: return `OperationResult::ok()`
-4. If timeout reached: return `OperationResult::fail("Deployment timeout after {n} seconds")`
+- Rollback is declared unsupported by the reviewed package; do not promise an
+  automatic rollback operation.
+- Server lifecycle and preview support are partial. Scope and cleanup permissions
+  require verification on the intended account.
+- Existing database association must already match the site. The audited path
+  refuses missing/mismatched association; it does not implement attach-existing.
+  [CLI issue #134](https://github.com/shippercli/cli/issues/134) remains open.
+- SQL declaration labels do not select or prove the actual Ploi server engine.
+- Creation and credential storage are not atomic. An ambiguous response or storage
+  failure may leave a resource behind. There is no durable credential journal or
+  automatic multi-database rollback in the reviewed audit branch.
+- Immediate readback can fail when persistence is delayed. Inspect actual state
+  before retrying; do not infer that creation failed from a readback failure.
+- Local tests and package integration do not prove concurrent-operation safety,
+  legacy migration, live credential connectivity or release readiness.
 
-## Functional Requirements
+## Review acceptance checklist
 
-**FR-001 — Provision site by domain**
-**As** the CLI, **I want** to find or create a Ploi site matching the profile's domain **so that** subsequent operations have a valid site ID.
-- Acceptance: `SiteResult::found(id)` when domain already exists; `SiteResult::created(id)` on new site; `SiteResult::fail(...)` on API error.
+- [ ] Verify installed plugin discovery and provider key `ploi`.
+- [ ] Verify validation and blocked/read-only planning against actual inputs.
+- [ ] Verify unowned and differently scoped existing resources are preserved.
+- [ ] Verify create/re-apply, deployment polling, status and logs on a live account.
+- [ ] Verify generated credentials authenticate from the intended application.
+- [ ] Verify partial creation/storage failure and fresh-process recovery.
+- [ ] Verify scoped cleanup, legacy migration and concurrent lifecycle behavior.
 
-**FR-002 — Trigger and poll deployment**
-**As** the CLI, **I want** to deploy the site via Ploi API and wait for completion **so that** deployment status is known before the command returns.
-- Acceptance: Returns `OperationResult::ok()` on success; `OperationResult::fail(msg)` on deploy-failed status or error keywords in logs; timeout after `deployment_timeout` seconds.
-
-**FR-003 — Read deployment logs**
-**As** the CLI, **I want** to fetch deployment log lines from Ploi **so that** I can surface failures and debug deployment issues.
-- Acceptance: Returns `array<int, string>` of log lines; empty array if unavailable.
-
-**FR-004 — Handle Ploi API exceptions gracefully**
-**As** the CLI, **I want** Ploi-specific exceptions to produce user-friendly messages **so that** debugging is easier.
-- Acceptance: Unauthenticated maps to auth error; NotFound maps to server ID error; ValidationException maps to validation error; all others use generic deployment error format.
-
-## Edge Cases
-
-- **Site create response missing id:** Returns `SiteResult::fail('Failed to create site: Invalid response from Ploi API')` — does not throw.
-- **Domain already exists:** Returns `SiteResult::found()` — `AbstractProvider` skips repository install because `isNew === false`.
-- **Deployment still running at timeout:** Returns `OperationResult::fail("Deployment timeout after {n} seconds. Deployment may still be running on Ploi.")`.
-- **Poll response missing data:** Loop continues without incrementing elapsed — safe against null responses.
-- **Empty site list from API:** Proceeds to create site — no false match against existing.
-- **Delete site not found:** Returns `OperationResult::ok()` — idempotent destroy.
-
-## Acceptance Criteria
-
-- [ ] PloiProvider registers all 17 operation managers
-- [ ] `getName()` returns `'ploi'`
-- [ ] `getServerId()` returns the configured numeric server ID
-- [ ] Validation fails cleanly when `api_key` or `server_id` is missing/wrong
-- [ ] Site find/create works for both existing and new domains
-- [ ] Deployment polling respects `deployment_timeout` config
-- [ ] Log inspection catches `deployment failed`, `fatal error`, `critical error` in logs
-- [ ] SDK exceptions are caught and mapped to user-friendly messages
-- [ ] `plan()` includes all 15+ sub-actions with human-readable labels
-
-## Open Questions / Potential Concerns
-
-- **`deployment_timeout` default of 60s** may be too short for apps with npm asset builds. Should this be configurable per-profile or per-project?
-- **`getDeploymentLogs` helper method** on `PloiProvider` is backwards-compatible but leaks `DeploymentLogReaderInterface` usage. Is this the right API surface, or should logs be retrieved through a command?
-- **Repository re-install on found site:** The current design correctly skips this, but there's no option to force a re-clone. Is this intentional?
-- **No site suspension support:** Ploi SDK supports it but Shipper doesn't expose it. Confirm this is out of scope.
+Keep unverified items open. The existence of a draft fix or a passing simulated
+API test is not completion evidence for the live lifecycle checklist.

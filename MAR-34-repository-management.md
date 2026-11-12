@@ -1,5 +1,5 @@
 ---
-description: "**Issue:** MAR-34 **Date:** 2026-04-24 **Status:** In Review"
+description: "Repository setup, source configuration and provider API limitations."
 ---
 
 # Spec: Repository Management
