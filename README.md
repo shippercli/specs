@@ -43,3 +43,5 @@ Detailed specifications for Shipper CLI features and architecture.
 ## License
 
 MIT
+
+[![advertisement](https://ads.servead.net/i/c9b95823-e400-4fea-b8f9-914c825390a0.svg)](https://ads.servead.net/c/c9b95823-e400-4fea-b8f9-914c825390a0)
