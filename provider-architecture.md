@@ -25,6 +25,7 @@ manager classes inside the CLI.
 | `shippercli/provider-forge` | Forge API v2 integration with explicit partial capabilities |
 | `shippercli/provider-easypanel` | EasyPanel API integration and ownership-safe service cleanup |
 | `shippercli/provider-cpanel` | cPanel UAPI/API2 integration with manifest-backed cleanup |
+| `shippercli/provider-ftp` | [Prebuilt file deployment over FTP or verified explicit FTPS](./ftp-provider.md), with manifest-backed cleanup |
 
 Provider discovery uses Composer package type `shipper-plugin` and the package
 metadata key `extra.shipper-plugin`. The CLI must not contain provider SDK
@@ -77,6 +78,9 @@ Provider implementations are intentionally not symmetric. For example:
   cleanup for marked app services.
 - cPanel uses an account manifest and requires ownership evidence before
   destroying domains, databases, or account resources.
+- FTP/FTPS uploads prebuilt files to a dedicated directory with a matching
+  deployment journal. It exposes saved deployment status without runtime
+  health checks, remote builds, or infrastructure management.
 
 The canonical capability state is the provider's `capabilities()` manifest and
 the corresponding provider documentation, not an assumption that every
