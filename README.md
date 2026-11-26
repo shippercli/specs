@@ -23,6 +23,7 @@ Detailed specifications for Shipper CLI features and architecture.
 
 - [Ploi Provider](./ploi-provider.md) - Ploi.io integration
 - [Forge Provider](./forge-provider.md) - Laravel Forge integration
+- [FTP / FTPS Provider](./ftp-provider.md) - Prebuilt file deployment, transport security, and ownership-safe cleanup
 
 ### Advanced Features
 
